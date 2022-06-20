@@ -1,6 +1,6 @@
 import { ApolloServer, gql } from "apollo-server";
 
-const tweets = [
+let tweets = [
   {
     id: "1",
     text: "first one!",
@@ -8,6 +8,19 @@ const tweets = [
   {
     id: "2",
     text: "second one",
+  },
+];
+
+let users = [
+  {
+    id: "1",
+    firstName: "nico",
+    lastName: "las",
+  },
+  {
+    id: "2",
+    firstName: "Elon",
+    lastName: "Musk",
   },
 ];
 
@@ -25,7 +38,8 @@ const typeDefs = gql`
     id: ID!
     username: String!
     firstName: String!
-    lastName: String
+    lastName: String!
+    fullName: String!
   }
 
   type Tweet {
@@ -35,6 +49,7 @@ const typeDefs = gql`
   }
 
   type Query {
+    allUsers: [User!]!
     allTweets: [Tweet!]!
     tweet(id: ID!): Tweet
     ping: String!
@@ -59,6 +74,35 @@ const resolvers = {
     },
     ping() {
       return "pong";
+    },
+    allUsers() {
+      console.log("allUsers called");
+      return users;
+    },
+  },
+  Mutation: {
+    postTweet(__, { text, userId }) {
+      const newTweet = {
+        id: tweets.length + 1,
+        text: text,
+      };
+      tweets.push(newTweet);
+      return newTweet;
+    },
+    deleteTweet(__, { id }) {
+      const tweet = tweets.find((tweet) => tweet.id === id);
+      if (!tweet) return false;
+      tweets = tweets.filter((tweet) => tweet.id !== id);
+      return true;
+    },
+  },
+  User: {
+    fullName({ firstName, lastName }) {
+      //root에는 이를 호출한 곳의 데이터가 있음 (여기서는 allUsers의 데이터)
+      //root자리에서 {} 로 접근해서 root의 정보 가져오는 것 가능
+      console.log("fullName called");
+      // console.log(root);
+      return `${firstName} ${lastName}`;
     },
   },
 };
